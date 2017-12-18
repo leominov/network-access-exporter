@@ -17,11 +17,11 @@ type Exporter struct {
 	config *Config
 }
 
-func IsTCPPortAvailable(item *Item) bool {
+func IsTCPPortAvailable(item *Item, timeout time.Duration) bool {
 	if item.Port < minTCPPort || item.Port > maxTCPPort {
 		return false
 	}
-	conn, err := net.DialTimeout("tcp", item.Resource, 100*time.Millisecond)
+	conn, err := net.DialTimeout("tcp", item.Resource, timeout)
 	if err != nil {
 		return false
 	}
@@ -40,7 +40,7 @@ func NewExporter(config *Config) *Exporter {
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	var avFloat float64
 	for _, item := range e.config.Items {
-		if IsTCPPortAvailable(item) {
+		if IsTCPPortAvailable(item, e.config.ConnectionTimeout) {
 			avFloat = 1.0
 		} else {
 			logrus.Warnf("TCP port not available: %s", item.Resource)
