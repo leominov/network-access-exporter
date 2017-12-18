@@ -1,4 +1,4 @@
-# Just anothe Prometheus exporter
+# Just another Prometheus exporter
 
 ## Metrics
 
