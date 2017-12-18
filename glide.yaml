@@ -1,0 +1,10 @@
+package: github.com/leominov/network-access-exporter
+import:
+- package: github.com/sirupsen/logrus
+- package: github.com/prometheus/client_golang
+  subpackages:
+  - prometheus
+  - prometheus/promhttp
+- package: github.com/prometheus/common
+  subpackages:
+  - version

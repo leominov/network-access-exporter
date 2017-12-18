@@ -1,0 +1,7 @@
+---
+logLevel: debug
+items:
+  - alias: teamcity
+    resource: teamcity.tcsbank.ru:80
+  - alias: activedirectory
+    resource: tcsbank.ru:389
