@@ -57,6 +57,7 @@ func main() {
 	}
 
 	logrus.Infof("Listen address: %s", cfg.ListenAddr)
+	logrus.Infof("Connection timeout: %s", cfg.ConnectionTimeout.String())
 
 	http.Handle(cfg.MetricPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

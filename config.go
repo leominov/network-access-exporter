@@ -6,21 +6,24 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
 const (
-	defaultsListenAddr = ":9407"
-	defaultsMetricPath = "/metrics"
+	defaultsListenAddr        = ":9407"
+	defaultsMetricPath        = "/metrics"
+	defaultsConnectionTimeout = 500 * time.Millisecond
 )
 
 type Config struct {
-	LogLevel   string  `yaml:"logLevel"`
-	ListenAddr string  `yaml:"listenAddr"`
-	MetricPath string  `yaml:"metricPath"`
-	Items      []*Item `yaml:"items"`
+	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
+	LogLevel          string        `yaml:"logLevel"`
+	ListenAddr        string        `yaml:"listenAddr"`
+	MetricPath        string        `yaml:"metricPath"`
+	Items             []*Item       `yaml:"items"`
 }
 
 type Item struct {
@@ -65,6 +68,10 @@ func parseConfig(c *Config) error {
 
 	if len(c.Items) == 0 {
 		return errors.New("Empty items list")
+	}
+
+	if c.ConnectionTimeout.Nanoseconds() == 0 {
+		c.ConnectionTimeout = defaultsConnectionTimeout
 	}
 
 	for _, item := range c.Items {
