@@ -83,6 +83,9 @@ func parseConfig(c *Config) error {
 		if err != nil {
 			return fmt.Errorf("Incorrent port in item: %s", item)
 		}
+		if len(item.Alias) == 0 {
+			item.Alias = item.Resource
+		}
 		item.Host = hostPort[0]
 		item.Port = portInt
 	}
