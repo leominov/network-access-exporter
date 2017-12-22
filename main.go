@@ -44,7 +44,7 @@ func main() {
 		versionInfo()
 	}
 
-	logrus.Infof("Starting %s...", exporterName)
+	logrus.Infof("Starting %s %s...", exporterName, version.Version)
 
 	cfg, err := LoadConfig(*configPathFlag)
 	if err != nil {
