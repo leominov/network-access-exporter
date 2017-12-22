@@ -17,7 +17,7 @@ type Exporter struct {
 	config *Config
 }
 
-func IsTCPPortAvailable(item *Item, timeout time.Duration) bool {
+func IsTCPPortAvailable(item Item, timeout time.Duration) bool {
 	if item.Port < minTCPPort || item.Port > maxTCPPort {
 		return false
 	}

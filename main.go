@@ -18,8 +18,7 @@ const (
 )
 
 var (
-	showVersion    = flag.Bool("version", false, "Prints version information and exit")
-	configPathFlag = flag.String("config-path", "/opt/prometheus/network-access-exporter.yaml", "Configuration file path")
+	showVersion = flag.Bool("version", false, "Prints version information and exit")
 
 	allowedResource = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "allowed"),
@@ -46,7 +45,7 @@ func main() {
 
 	logrus.Infof("Starting %s %s...", exporterName, version.Version)
 
-	cfg, err := LoadConfig(*configPathFlag)
+	cfg, err := LoadConfig()
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -59,13 +58,13 @@ func main() {
 	logrus.Infof("Listen address: %s", cfg.ListenAddr)
 	logrus.Infof("Connection timeout: %s", cfg.ConnectionTimeout.String())
 
-	http.Handle(cfg.MetricPath, promhttp.Handler())
+	http.Handle(cfg.MetricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
 			<head><title>` + exporterName + ` v` + version.Version + `</title></head>
 			<body>
 			<h1>` + exporterName + ` v` + version.Version + `</h1>
-			<p><a href='` + cfg.MetricPath + `'>Metrics</a></p>
+			<p><a href='` + cfg.MetricsPath + `'>Metrics</a></p>
 			</body>
 			</html>
 		`))

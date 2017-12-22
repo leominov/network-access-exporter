@@ -3,49 +3,103 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
 
+	"os"
+
 	"github.com/sirupsen/logrus"
-	yaml "gopkg.in/yaml.v2"
 )
 
 const (
 	defaultsListenAddr        = ":9407"
-	defaultsMetricPath        = "/metrics"
+	defaultsMetricsPath       = "/metrics"
 	defaultsConnectionTimeout = 500 * time.Millisecond
 )
 
 type Config struct {
-	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
-	LogLevel          string        `yaml:"logLevel"`
-	ListenAddr        string        `yaml:"listenAddr"`
-	MetricPath        string        `yaml:"metricPath"`
-	Items             []*Item       `yaml:"items"`
+	ConnectionTimeout time.Duration
+	LogLevel          string
+	ListenAddr        string
+	MetricsPath       string
+	Items             []Item
 }
 
 type Item struct {
-	Alias    string `yaml:"alias"`
-	Resource string `yaml:"resource"`
-	Host     string `yaml:"-"`
-	Port     int    `yaml:"-"`
+	Alias    string
+	Resource string
+	Host     string
+	Port     int
 }
 
-func LoadConfig(path string) (*Config, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("error reading %s: %v", path, err)
-	}
+func LoadConfig() (*Config, error) {
 	nc := &Config{}
-	if err := yaml.Unmarshal(b, nc); err != nil {
-		return nil, fmt.Errorf("error unmarshaling %s: %v", path, err)
+	nc.SetEmptyToDefaults()
+	if err := nc.LoadFromEnv(); err != nil {
+		return nil, err
 	}
 	if err := parseConfig(nc); err != nil {
 		return nil, err
 	}
 	return nc, nil
+}
+
+func (c *Config) SetEmptyToDefaults() {
+	if len(c.ListenAddr) == 0 {
+		c.ListenAddr = defaultsListenAddr
+	}
+	if len(c.MetricsPath) == 0 {
+		c.MetricsPath = defaultsMetricsPath
+	}
+	if c.ConnectionTimeout.Nanoseconds() == 0 {
+		c.ConnectionTimeout = defaultsConnectionTimeout
+	}
+}
+
+func (c *Config) LoadFromEnv() error {
+	connectionTimeoutRaw := os.Getenv("NA_EXPORTER_TIMEOUT")
+	if len(connectionTimeoutRaw) != 0 {
+		d, err := time.ParseDuration(connectionTimeoutRaw)
+		if err != nil {
+			return err
+		}
+		c.ConnectionTimeout = d
+	}
+	logLevelEnv := os.Getenv("NA_EXPORTER_LOG_LEVEL")
+	if len(logLevelEnv) != 0 {
+		c.LogLevel = logLevelEnv
+	}
+	listenAddressEnv := os.Getenv("NA_EXPORTER_WEB_LISTEN_ADDRESS")
+	if len(listenAddressEnv) != 0 {
+		c.ListenAddr = listenAddressEnv
+	}
+	metricsPathEnv := os.Getenv("NA_EXPORTER_WEB_METRICS_PATH")
+	if len(metricsPathEnv) != 0 {
+		c.MetricsPath = metricsPathEnv
+	}
+	resourcesEnv := os.Getenv("NA_EXPORTER_RESOURCES")
+	if len(resourcesEnv) != 0 {
+		resources := strings.Split(resourcesEnv, ",")
+		for _, resource := range resources {
+			resource = strings.TrimSpace(resource)
+			c.Items = append(c.Items, Item{
+				Resource: resource,
+			})
+		}
+	}
+	totalResources := len(c.Items)
+	aliasesEnv := os.Getenv("NA_EXPORTER_ALIASES")
+	if len(aliasesEnv) != 0 {
+		aliases := strings.Split(aliasesEnv, ",")
+		for i, alias := range aliases {
+			alias := strings.TrimSpace(alias)
+			if i <= totalResources-1 {
+				c.Items[i].Alias = alias
+			}
+		}
+	}
+	return nil
 }
 
 func parseConfig(c *Config) error {
@@ -58,30 +112,18 @@ func parseConfig(c *Config) error {
 	}
 	logrus.SetLevel(lvl)
 
-	if len(c.ListenAddr) == 0 {
-		c.ListenAddr = defaultsListenAddr
-	}
-
-	if len(c.MetricPath) == 0 {
-		c.MetricPath = defaultsMetricPath
-	}
-
 	if len(c.Items) == 0 {
-		return errors.New("Empty items list")
-	}
-
-	if c.ConnectionTimeout.Nanoseconds() == 0 {
-		c.ConnectionTimeout = defaultsConnectionTimeout
+		return errors.New("empty items list")
 	}
 
 	for _, item := range c.Items {
 		hostPort := strings.Split(item.Resource, ":")
 		if len(hostPort) != 2 {
-			return fmt.Errorf("Incorrect item: %s", item)
+			return fmt.Errorf("incorrect item: %s", item.Resource)
 		}
 		portInt, err := strconv.Atoi(hostPort[1])
 		if err != nil {
-			return fmt.Errorf("Incorrent port in item: %s", item)
+			return fmt.Errorf("incorrent port in item: %s", item.Resource)
 		}
 		if len(item.Alias) == 0 {
 			item.Alias = item.Resource

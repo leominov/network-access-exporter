@@ -21,6 +21,7 @@ _cgo_export.*
 
 bin/
 package/
+.idea/
 .vagrant/
 network-access-exporter
 .build
