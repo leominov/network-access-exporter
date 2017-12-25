@@ -2,12 +2,11 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
-
-	"os"
 
 	"github.com/sirupsen/logrus"
 )
@@ -16,6 +15,14 @@ const (
 	defaultsListenAddr        = ":9407"
 	defaultsMetricsPath       = "/metrics"
 	defaultsConnectionTimeout = 500 * time.Millisecond
+)
+
+var (
+	connectionTimeout   = flag.Duration("timeout", defaultsConnectionTimeout, "Connection timeout")
+	logLevel            = flag.String("log-level", "info", "Logging level")
+	listenAddress       = flag.String("web.listen-address", defaultsListenAddr, "Listen address")
+	metricsPath         = flag.String("web.telemetry-path", defaultsMetricsPath, "Metrics path")
+	resourcesCollection = flag.String("resources", "", "Resources list")
 )
 
 type Config struct {
@@ -36,7 +43,7 @@ type Item struct {
 func LoadConfig() (*Config, error) {
 	nc := &Config{}
 	nc.SetEmptyToDefaults()
-	if err := nc.LoadFromEnv(); err != nil {
+	if err := nc.LoadFromFlags(); err != nil {
 		return nil, err
 	}
 	if err := parseConfig(nc); err != nil {
@@ -57,30 +64,21 @@ func (c *Config) SetEmptyToDefaults() {
 	}
 }
 
-func (c *Config) LoadFromEnv() error {
-	connectionTimeoutRaw := os.Getenv("NA_EXPORTER_TIMEOUT")
-	if len(connectionTimeoutRaw) != 0 {
-		d, err := time.ParseDuration(connectionTimeoutRaw)
-		if err != nil {
-			return err
-		}
-		c.ConnectionTimeout = d
+func (c *Config) LoadFromFlags() error {
+	if connectionTimeout.Nanoseconds() != 0 {
+		c.ConnectionTimeout = *connectionTimeout
 	}
-	logLevelEnv := os.Getenv("NA_EXPORTER_LOG_LEVEL")
-	if len(logLevelEnv) != 0 {
-		c.LogLevel = logLevelEnv
+	if len(*logLevel) != 0 {
+		c.LogLevel = *logLevel
 	}
-	listenAddressEnv := os.Getenv("NA_EXPORTER_WEB_LISTEN_ADDRESS")
-	if len(listenAddressEnv) != 0 {
-		c.ListenAddr = listenAddressEnv
+	if len(*listenAddress) != 0 {
+		c.ListenAddr = *listenAddress
 	}
-	metricsPathEnv := os.Getenv("NA_EXPORTER_WEB_METRICS_PATH")
-	if len(metricsPathEnv) != 0 {
-		c.MetricsPath = metricsPathEnv
+	if len(*metricsPath) != 0 {
+		c.MetricsPath = *metricsPath
 	}
-	resourcesEnv := os.Getenv("NA_EXPORTER_RESOURCES")
-	if len(resourcesEnv) != 0 {
-		resources := strings.Split(resourcesEnv, ",")
+	if len(*resourcesCollection) != 0 {
+		resources := strings.Split(*resourcesCollection, ",")
 		for _, resourceRaw := range resources {
 			resourceRaw = strings.TrimSpace(resourceRaw)
 			if len(resourceRaw) == 0 {
