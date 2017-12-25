@@ -81,22 +81,20 @@ func (c *Config) LoadFromEnv() error {
 	resourcesEnv := os.Getenv("NA_EXPORTER_RESOURCES")
 	if len(resourcesEnv) != 0 {
 		resources := strings.Split(resourcesEnv, ",")
-		for _, resource := range resources {
-			resource = strings.TrimSpace(resource)
-			c.Items = append(c.Items, Item{
-				Resource: resource,
-			})
-		}
-	}
-	totalResources := len(c.Items)
-	aliasesEnv := os.Getenv("NA_EXPORTER_ALIASES")
-	if len(aliasesEnv) != 0 {
-		aliases := strings.Split(aliasesEnv, ",")
-		for i, alias := range aliases {
-			alias := strings.TrimSpace(alias)
-			if i <= totalResources-1 {
-				c.Items[i].Alias = alias
+		for _, resourceRaw := range resources {
+			resourceRaw = strings.TrimSpace(resourceRaw)
+			if len(resourceRaw) == 0 {
+				continue
 			}
+			resource := strings.Split(resourceRaw, "=")
+			item := Item{}
+			if len(resource) == 2 {
+				item.Resource = strings.TrimSpace(resource[1])
+				item.Alias = strings.TrimSpace(resource[0])
+			} else {
+				item.Resource = strings.TrimSpace(resource[0])
+			}
+			c.Items = append(c.Items, item)
 		}
 	}
 	return nil
@@ -119,11 +117,11 @@ func parseConfig(c *Config) error {
 	for _, item := range c.Items {
 		hostPort := strings.Split(item.Resource, ":")
 		if len(hostPort) != 2 {
-			return fmt.Errorf("incorrect item: %s", item.Resource)
+			return fmt.Errorf("incorrect item: %+v", item)
 		}
 		portInt, err := strconv.Atoi(hostPort[1])
 		if err != nil {
-			return fmt.Errorf("incorrent port in item: %s", item.Resource)
+			return fmt.Errorf("incorrent port in item: %+v", item)
 		}
 		if len(item.Alias) == 0 {
 			item.Alias = item.Resource
