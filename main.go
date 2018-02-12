@@ -23,7 +23,7 @@ var (
 	allowedResource = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "allowed"),
 		"Was the last check successful",
-		[]string{"resource", "ip"}, nil,
+		[]string{"resource", "ip", "ipv6"}, nil,
 	)
 
 	loopkupError = prometheus.NewDesc(

@@ -17,6 +17,7 @@ func NewExporter(config *Config) *Exporter {
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	var avFloat float64
+	var isIPV6Address string
 	for _, item := range e.config.Items {
 		ipAddresses, err := item.Lookup()
 		if err != nil {
@@ -32,7 +33,12 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 				logrus.Warnf("TCP port not available: %s on %s", item.Resource, ipAddress.String())
 				avFloat = 0.0
 			}
-			ch <- prometheus.MustNewConstMetric(allowedResource, prometheus.GaugeValue, avFloat, item.Resource, ipAddress.String())
+			if ok := IsIPv6(ipAddress.String()); ok {
+				isIPV6Address = "1"
+			} else {
+				isIPV6Address = "0"
+			}
+			ch <- prometheus.MustNewConstMetric(allowedResource, prometheus.GaugeValue, avFloat, item.Resource, ipAddress.String(), isIPV6Address)
 		}
 	}
 }

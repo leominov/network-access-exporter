@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -23,4 +24,9 @@ func IsTCPPortAvailable(ipAddress net.IP, port int, timeout time.Duration) bool 
 		return false
 	}
 	return true
+}
+
+func IsIPv6(str string) bool {
+	ip := net.ParseIP(str)
+	return ip != nil && strings.Contains(str, ":")
 }
