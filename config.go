@@ -33,13 +33,6 @@ type Config struct {
 	Items             []Item
 }
 
-type Item struct {
-	Alias    string
-	Resource string
-	Host     string
-	Port     int
-}
-
 func LoadConfig() (*Config, error) {
 	nc := &Config{}
 	nc.SetEmptyToDefaults()
@@ -84,13 +77,8 @@ func (c *Config) LoadFromFlags() error {
 			if len(resourceRaw) == 0 {
 				continue
 			}
-			resource := strings.Split(resourceRaw, "=")
-			item := Item{}
-			if len(resource) == 2 {
-				item.Resource = strings.TrimSpace(resource[1])
-				item.Alias = strings.TrimSpace(resource[0])
-			} else {
-				item.Resource = strings.TrimSpace(resource[0])
+			item := Item{
+				Resource: resourceRaw,
 			}
 			c.Items = append(c.Items, item)
 		}
@@ -107,12 +95,10 @@ func parseConfig(c *Config) error {
 		return err
 	}
 	logrus.SetLevel(lvl)
-
 	if len(c.Items) == 0 {
 		return errors.New("empty items list")
 	}
-
-	for _, item := range c.Items {
+	for id, item := range c.Items {
 		hostPort := strings.Split(item.Resource, ":")
 		if len(hostPort) != 2 {
 			return fmt.Errorf("incorrect item: %+v", item)
@@ -121,12 +107,9 @@ func parseConfig(c *Config) error {
 		if err != nil {
 			return fmt.Errorf("incorrent port in item: %+v", item)
 		}
-		if len(item.Alias) == 0 {
-			item.Alias = item.Resource
-		}
 		item.Host = hostPort[0]
 		item.Port = portInt
+		c.Items[id] = item
 	}
-
 	return nil
 }

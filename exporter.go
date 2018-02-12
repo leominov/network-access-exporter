@@ -1,34 +1,12 @@
 package main
 
 import (
-	"net"
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	minTCPPort = 0
-	maxTCPPort = 65535
-)
-
 type Exporter struct {
 	config *Config
-}
-
-func IsTCPPortAvailable(item Item, timeout time.Duration) bool {
-	if item.Port < minTCPPort || item.Port > maxTCPPort {
-		return false
-	}
-	conn, err := net.DialTimeout("tcp", item.Resource, timeout)
-	if err != nil {
-		return false
-	}
-	if err := conn.Close(); err != nil {
-		return false
-	}
-	return true
 }
 
 func NewExporter(config *Config) *Exporter {
@@ -40,18 +18,26 @@ func NewExporter(config *Config) *Exporter {
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	var avFloat float64
 	for _, item := range e.config.Items {
-		if IsTCPPortAvailable(item, e.config.ConnectionTimeout) {
-			avFloat = 1.0
-		} else {
-			logrus.Warnf("TCP port not available: %s", item.Resource)
-			avFloat = 0.0
+		ipAddresses, err := item.Lookup()
+		if err != nil {
+			logrus.Errorf("Cant get IP address: %v", err)
+			ch <- prometheus.MustNewConstMetric(loopkupError, prometheus.GaugeValue, 1.0, item.Resource)
+			continue
 		}
-		ch <- prometheus.MustNewConstMetric(
-			allowedResource, prometheus.GaugeValue, avFloat, item.Resource, item.Alias,
-		)
+		for _, ipAddress := range ipAddresses {
+			logrus.Debugf("Checking %s with port %d on %s...", item.Host, item.Port, ipAddress.String())
+			if IsTCPPortAvailable(ipAddress, item.Port, e.config.ConnectionTimeout) {
+				avFloat = 1.0
+			} else {
+				logrus.Warnf("TCP port not available: %s on %s", item.Resource, ipAddress.String())
+				avFloat = 0.0
+			}
+			ch <- prometheus.MustNewConstMetric(allowedResource, prometheus.GaugeValue, avFloat, item.Resource, ipAddress.String())
+		}
 	}
 }
 
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- allowedResource
+	ch <- loopkupError
 }

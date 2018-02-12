@@ -23,7 +23,13 @@ var (
 	allowedResource = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "allowed"),
 		"Was the last check successful",
-		[]string{"resource", "alias"}, nil,
+		[]string{"resource", "ip"}, nil,
+	)
+
+	loopkupError = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "lookup_error"),
+		"Error with getting IP address of resource",
+		[]string{"resource"}, nil,
 	)
 )
 
