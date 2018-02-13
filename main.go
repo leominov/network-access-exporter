@@ -31,6 +31,18 @@ var (
 		"Error with getting IP address of resource",
 		[]string{"resource"}, nil,
 	)
+
+	loopkupDuration = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "lookup_duration_seconds"),
+		"Time spent for resource lookup in seconds",
+		[]string{"resource"}, nil,
+	)
+
+	dialDuration = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "dial_duration_seconds"),
+		"Time spent for TCP dial in seconds",
+		[]string{"resource", "ip", "ipv6"}, nil,
+	)
 )
 
 func init() {
