@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
@@ -13,6 +15,8 @@ import (
 )
 
 const (
+	ConfigPath = "/config"
+
 	namespace    = "network_access"
 	exporterName = "network_access_exporter"
 )
@@ -73,16 +77,28 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	if len(cfg.File) != 0 {
+		logrus.Infof("Configuration file: %s", cfg.File)
+	}
 	logrus.Infof("Listen address: %s", cfg.ListenAddr)
 	logrus.Infof("Connection timeout: %s", cfg.ConnectionTimeout.String())
 
 	http.Handle(cfg.MetricsPath, promhttp.Handler())
+	http.HandleFunc(ConfigPath, func(w http.ResponseWriter, r *http.Request) {
+		b, err := yaml.Marshal(cfg)
+		if err != nil {
+			http.Error(w, "Error encoding response", http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte(b))
+	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
 			<head><title>` + exporterName + ` v` + version.Version + `</title></head>
 			<body>
 			<h1>` + exporterName + ` v` + version.Version + `</h1>
 			<p><a href='` + cfg.MetricsPath + `'>Metrics</a></p>
+			<p><a href='` + ConfigPath + `'>Configuration</a></p>
 			</body>
 			</html>
 		`))

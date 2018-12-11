@@ -17,14 +17,15 @@ import (
 const (
 	defaultsListenAddr        = ":9407"
 	defaultsMetricsPath       = "/metrics"
+	defaultsLogLevel          = "info"
 	defaultsConnectionTimeout = 500 * time.Millisecond
 )
 
 var (
-	connectionTimeout   = flag.Duration("timeout", defaultsConnectionTimeout, "Connection timeout")
-	logLevel            = flag.String("log-level", "info", "Logging level")
-	listenAddress       = flag.String("web.listen-address", defaultsListenAddr, "Listen address")
-	metricsPath         = flag.String("web.telemetry-path", defaultsMetricsPath, "Metrics path")
+	connectionTimeout   = flag.Duration("timeout", 0, "Connection timeout")
+	logLevel            = flag.String("log-level", "", "Logging level")
+	listenAddress       = flag.String("web.listen-address", "", "Listen address")
+	metricsPath         = flag.String("web.telemetry-path", "", "Metrics path")
 	resourcesCollection = flag.String("resources", "", "Resources list")
 	configFile          = flag.String("config-file", "", "Configuration file in YAML format")
 )
@@ -35,20 +36,23 @@ type Config struct {
 	ListenAddr        string        `yaml:"listenAddr"`
 	MetricsPath       string        `yaml:"metricsPath"`
 	Items             []Item        `yaml:"items"`
+	File              string        `yaml:"-"`
 }
 
 func LoadConfig() (*Config, error) {
-	nc := &Config{}
+	nc := &Config{
+		File: *configFile,
+	}
 	if err := nc.LoadFromFile(); err != nil {
 		return nil, err
 	}
 	if err := nc.LoadFromFlags(); err != nil {
 		return nil, err
 	}
+	nc.SetEmptyToDefaults()
 	if err := parseConfig(nc); err != nil {
 		return nil, err
 	}
-	nc.SetEmptyToDefaults()
 	return nc, nil
 }
 
@@ -58,6 +62,9 @@ func (c *Config) SetEmptyToDefaults() {
 	}
 	if len(c.MetricsPath) == 0 {
 		c.MetricsPath = defaultsMetricsPath
+	}
+	if len(c.LogLevel) == 0 {
+		c.LogLevel = defaultsLogLevel
 	}
 	if c.ConnectionTimeout.Nanoseconds() == 0 {
 		c.ConnectionTimeout = defaultsConnectionTimeout
@@ -108,9 +115,6 @@ func (c *Config) LoadFromFile() error {
 }
 
 func parseConfig(c *Config) error {
-	if c.LogLevel == "" {
-		c.LogLevel = "info"
-	}
 	lvl, err := logrus.ParseLevel(c.LogLevel)
 	if err != nil {
 		return err
