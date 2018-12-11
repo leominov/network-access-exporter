@@ -31,12 +31,13 @@ var (
 )
 
 type Config struct {
-	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
-	LogLevel          string        `yaml:"logLevel"`
-	ListenAddr        string        `yaml:"listenAddr"`
-	MetricsPath       string        `yaml:"metricsPath"`
-	Items             []Item        `yaml:"items"`
-	File              string        `yaml:"-"`
+	ConnectionTimeout time.Duration       `yaml:"connectionTimeout"`
+	LogLevel          string              `yaml:"logLevel"`
+	ListenAddr        string              `yaml:"listenAddr"`
+	MetricsPath       string              `yaml:"metricsPath"`
+	RawItems          map[string][]string `yaml:"items"`
+	Items             []Item              `yaml:"-"`
+	File              string              `yaml:"-"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -120,21 +121,26 @@ func parseConfig(c *Config) error {
 		return err
 	}
 	logrus.SetLevel(lvl)
-	if len(c.Items) == 0 {
+	if len(c.RawItems) == 0 {
 		return errors.New("empty items list")
 	}
-	for id, item := range c.Items {
-		hostPort := strings.Split(item.Resource, ":")
-		if len(hostPort) != 2 {
-			return fmt.Errorf("incorrect item: %+v", item)
+	for group, items := range c.RawItems {
+		for _, addr := range items {
+			hostPort := strings.Split(addr, ":")
+			if len(hostPort) != 2 {
+				return fmt.Errorf("incorrect item: %+v", addr)
+			}
+			portInt, err := strconv.Atoi(hostPort[1])
+			if err != nil {
+				return fmt.Errorf("incorrent port in item: %+v", addr)
+			}
+			item := Item{
+				Host:  hostPort[0],
+				Port:  portInt,
+				Group: group,
+			}
+			c.Items = append(c.Items, item)
 		}
-		portInt, err := strconv.Atoi(hostPort[1])
-		if err != nil {
-			return fmt.Errorf("incorrent port in item: %+v", item)
-		}
-		item.Host = hostPort[0]
-		item.Port = portInt
-		c.Items[id] = item
 	}
 	return nil
 }
