@@ -4,9 +4,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/sirupsen/logrus"
 )
@@ -23,25 +26,29 @@ var (
 	listenAddress       = flag.String("web.listen-address", defaultsListenAddr, "Listen address")
 	metricsPath         = flag.String("web.telemetry-path", defaultsMetricsPath, "Metrics path")
 	resourcesCollection = flag.String("resources", "", "Resources list")
+	configFile          = flag.String("config-file", "", "Configuration file in YAML format")
 )
 
 type Config struct {
-	ConnectionTimeout time.Duration
-	LogLevel          string
-	ListenAddr        string
-	MetricsPath       string
-	Items             []Item
+	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
+	LogLevel          string        `yaml:"logLevel"`
+	ListenAddr        string        `yaml:"listenAddr"`
+	MetricsPath       string        `yaml:"metricsPath"`
+	Items             []Item        `yaml:"items"`
 }
 
 func LoadConfig() (*Config, error) {
 	nc := &Config{}
-	nc.SetEmptyToDefaults()
+	if err := nc.LoadFromFile(); err != nil {
+		return nil, err
+	}
 	if err := nc.LoadFromFlags(); err != nil {
 		return nil, err
 	}
 	if err := parseConfig(nc); err != nil {
 		return nil, err
 	}
+	nc.SetEmptyToDefaults()
 	return nc, nil
 }
 
@@ -82,6 +89,20 @@ func (c *Config) LoadFromFlags() error {
 			}
 			c.Items = append(c.Items, item)
 		}
+	}
+	return nil
+}
+
+func (c *Config) LoadFromFile() error {
+	if len(*configFile) == 0 {
+		return nil
+	}
+	b, err := ioutil.ReadFile(*configFile)
+	if err != nil {
+		return err
+	}
+	if err := yaml.Unmarshal(b, &c); err != nil {
+		return err
 	}
 	return nil
 }
