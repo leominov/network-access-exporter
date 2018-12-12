@@ -3,7 +3,7 @@ connectionTimeout: 500ms
 logLevel: debug
 listenAddr: 0.0.0.0:9407
 metricsPath: /metrics
-items:
-  group1:
-    - yandex.ru:443
-    - google.com:443
+resources:
+  database#postgres:
+    - "yandex.ru:443"
+    - "google.com:443"

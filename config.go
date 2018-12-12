@@ -30,14 +30,52 @@ var (
 	configFile          = flag.String("config-file", "", "Configuration file in YAML format")
 )
 
+type ItemRaw Item
+type ItemMap map[string][]ItemRaw
+
 type Config struct {
-	ConnectionTimeout time.Duration       `yaml:"connectionTimeout"`
-	LogLevel          string              `yaml:"logLevel"`
-	ListenAddr        string              `yaml:"listenAddr"`
-	MetricsPath       string              `yaml:"metricsPath"`
-	RawItems          map[string][]string `yaml:"items"`
-	Items             []Item              `yaml:"-"`
-	File              string              `yaml:"-"`
+	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
+	LogLevel          string        `yaml:"logLevel"`
+	ListenAddr        string        `yaml:"listenAddr"`
+	MetricsPath       string        `yaml:"metricsPath"`
+	RawItems          ItemMap       `yaml:"resources"`
+	Items             []Item        `yaml:"-"`
+	File              string        `yaml:"-"`
+}
+
+func (i *ItemRaw) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var (
+		value Item
+		str   string
+	)
+	if err := unmarshal(&value); err != nil {
+		if err := unmarshal(&str); err != nil {
+			return err
+		}
+		value = Item{
+			Resource: str,
+		}
+	}
+	*i = (ItemRaw)(value)
+	return nil
+}
+
+func (i *ItemMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var (
+		value map[string][]ItemRaw
+		slice []ItemRaw
+	)
+	// try to parse map[string][]string
+	if err := unmarshal(&value); err != nil {
+		// try to parse []string
+		if err := unmarshal(&slice); err != nil {
+			return err
+		}
+		value = map[string][]ItemRaw{}
+		value["all"] = slice
+	}
+	*i = (ItemMap)(value)
+	return nil
 }
 
 func LoadConfig() (*Config, error) {
@@ -125,14 +163,14 @@ func parseConfig(c *Config) error {
 		return errors.New("empty items list")
 	}
 	for group, items := range c.RawItems {
-		for _, addr := range items {
-			hostPort := strings.Split(addr, ":")
+		for _, item := range items {
+			hostPort := strings.Split(item.Resource, ":")
 			if len(hostPort) != 2 {
-				return fmt.Errorf("incorrect item: %+v", addr)
+				return fmt.Errorf("incorrect item: %+v", item.Resource)
 			}
 			portInt, err := strconv.Atoi(hostPort[1])
 			if err != nil {
-				return fmt.Errorf("incorrent port in item: %+v", addr)
+				return fmt.Errorf("incorrent port in item: %+v", item.Resource)
 			}
 			item := Item{
 				Host:  hostPort[0],

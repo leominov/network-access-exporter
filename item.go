@@ -5,7 +5,7 @@ import (
 )
 
 type Item struct {
-	Resource string `yaml:"resource"`
+	Resource string `yaml:"addr"`
 	Group    string `yaml:"group,omitempty"`
 	Host     string `yaml:"-"`
 	Port     int    `yaml:"-"`
