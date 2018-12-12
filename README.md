@@ -1,5 +1,31 @@
 # Just another Prometheus exporter
 
+## Usage
+
+### Flags
+
+```
+Usage of ./network-access-exporter:
+  -config-file string
+    	Configuration file in YAML format
+  -log-level string
+    	Logging level
+  -resources string
+    	Resources list
+  -timeout duration
+    	Connection timeout
+  -version
+    	Prints version information and exit
+  -web.listen-address string
+    	Listen address
+  -web.telemetry-path string
+    	Metrics path
+```
+
+### Configuration file
+
+See [example](config.example.yaml).
+
 ## Metrics
 
 * `network_access_allowed` – Was the last check successful
