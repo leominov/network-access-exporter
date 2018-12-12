@@ -5,9 +5,9 @@ listenAddr: 0.0.0.0:9407
 metricsPath: /metrics
 resources:
   atlassian:
-    - jira.tcsbank.ru:443
+    - jira.yandex.ru:443
   devops:
-    - grafana.devops.tcsbank.ru:80
+    - grafana.com:443
   database#postgres:
     - yandex.ru:443
     - google.com:443
