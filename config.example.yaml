@@ -4,6 +4,10 @@ logLevel: debug
 listenAddr: 0.0.0.0:9407
 metricsPath: /metrics
 resources:
+  atlassian:
+    - jira.tcsbank.ru:443
+  devops:
+    - grafana.devops.tcsbank.ru:80
   database#postgres:
-    - "yandex.ru:443"
-    - "google.com:443"
+    - yandex.ru:443
+    - google.com:443

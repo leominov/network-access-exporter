@@ -27,25 +27,25 @@ var (
 	allowedResource = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "allowed"),
 		"Was the last check successful",
-		[]string{"resource", "ip", "ipv6"}, nil,
+		[]string{"resource", "meta_group", "ip", "ipv6"}, nil,
 	)
 
 	loopkupError = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "lookup_error"),
 		"Error with getting IP address of resource",
-		[]string{"resource"}, nil,
+		[]string{"resource", "meta_group"}, nil,
 	)
 
 	loopkupDuration = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "lookup_duration_seconds"),
 		"Time spent for resource lookup in seconds",
-		[]string{"resource"}, nil,
+		[]string{"resource", "meta_group"}, nil,
 	)
 
 	dialDuration = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "dial_duration_seconds"),
 		"Time spent for TCP dial in seconds",
-		[]string{"resource", "ip", "ipv6"}, nil,
+		[]string{"resource", "meta_group", "ip", "ipv6"}, nil,
 	)
 )
 
@@ -82,6 +82,7 @@ func main() {
 	}
 	logrus.Infof("Listen address: %s", cfg.ListenAddr)
 	logrus.Infof("Connection timeout: %s", cfg.ConnectionTimeout.String())
+	logrus.Debugf("Resources: %#v", cfg.Items)
 
 	http.Handle(cfg.MetricsPath, promhttp.Handler())
 	http.HandleFunc(ConfigPath, func(w http.ResponseWriter, r *http.Request) {

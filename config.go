@@ -3,9 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
-	"fmt"
 	"io/ioutil"
-	"strconv"
 	"strings"
 	"time"
 
@@ -30,40 +28,22 @@ var (
 	configFile          = flag.String("config-file", "", "Configuration file in YAML format")
 )
 
-type ItemRaw Item
-type ItemMap map[string][]ItemRaw
+type StringMap map[string][]string
 
 type Config struct {
 	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
 	LogLevel          string        `yaml:"logLevel"`
 	ListenAddr        string        `yaml:"listenAddr"`
 	MetricsPath       string        `yaml:"metricsPath"`
-	RawItems          ItemMap       `yaml:"resources"`
+	RawItems          StringMap     `yaml:"resources"`
 	Items             []Item        `yaml:"-"`
 	File              string        `yaml:"-"`
 }
 
-func (i *ItemRaw) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (i *StringMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var (
-		value Item
-		str   string
-	)
-	if err := unmarshal(&value); err != nil {
-		if err := unmarshal(&str); err != nil {
-			return err
-		}
-		value = Item{
-			Resource: str,
-		}
-	}
-	*i = (ItemRaw)(value)
-	return nil
-}
-
-func (i *ItemMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var (
-		value map[string][]ItemRaw
-		slice []ItemRaw
+		value map[string][]string
+		slice []string
 	)
 	// try to parse map[string][]string
 	if err := unmarshal(&value); err != nil {
@@ -71,10 +51,10 @@ func (i *ItemMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if err := unmarshal(&slice); err != nil {
 			return err
 		}
-		value = map[string][]ItemRaw{}
+		value = map[string][]string{}
 		value["all"] = slice
 	}
-	*i = (ItemMap)(value)
+	*i = (StringMap)(value)
 	return nil
 }
 
@@ -125,16 +105,8 @@ func (c *Config) LoadFromFlags() error {
 	}
 	if len(*resourcesCollection) != 0 {
 		resources := strings.Split(*resourcesCollection, ",")
-		for _, resourceRaw := range resources {
-			resourceRaw = strings.TrimSpace(resourceRaw)
-			if len(resourceRaw) == 0 {
-				continue
-			}
-			item := Item{
-				Resource: resourceRaw,
-			}
-			c.Items = append(c.Items, item)
-		}
+		c.RawItems = make(map[string][]string)
+		c.RawItems["all"] = resources
 	}
 	return nil
 }
@@ -163,21 +135,13 @@ func parseConfig(c *Config) error {
 		return errors.New("empty items list")
 	}
 	for group, items := range c.RawItems {
-		for _, item := range items {
-			hostPort := strings.Split(item.Resource, ":")
-			if len(hostPort) != 2 {
-				return fmt.Errorf("incorrect item: %+v", item.Resource)
-			}
-			portInt, err := strconv.Atoi(hostPort[1])
+		for _, resource := range items {
+			item, err := ParseResource(resource)
 			if err != nil {
-				return fmt.Errorf("incorrent port in item: %+v", item.Resource)
+				return err
 			}
-			item := Item{
-				Host:  hostPort[0],
-				Port:  portInt,
-				Group: group,
-			}
-			c.Items = append(c.Items, item)
+			item.Group = group
+			c.Items = append(c.Items, *item)
 		}
 	}
 	return nil
