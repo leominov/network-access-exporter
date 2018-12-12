@@ -1,0 +1,13 @@
+---
+connectionTimeout: 500ms
+logLevel: debug
+listenAddr: 0.0.0.0:9407
+metricsPath: /metrics
+resources:
+  atlassian:
+    - jira.yandex.ru:443
+  devops:
+    - grafana.com:443
+  database#postgres:
+    - yandex.ru:443
+    - google.com:443

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -29,11 +30,23 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		ipAddresses, err := item.Lookup()
 		if err != nil {
 			logrus.Errorf("Cant get IP address: %v", err)
-			ch <- prometheus.MustNewConstMetric(loopkupError, prometheus.GaugeValue, 1.0, item.Resource)
+			ch <- prometheus.MustNewConstMetric(
+				loopkupError,
+				prometheus.GaugeValue,
+				1.0,
+				item.Resource,
+				item.Group,
+			)
 			continue
 		}
 		durationInSeconds = time.Now().Sub(startTime).Seconds()
-		ch <- prometheus.MustNewConstMetric(loopkupDuration, prometheus.GaugeValue, durationInSeconds, item.Resource)
+		ch <- prometheus.MustNewConstMetric(
+			loopkupDuration,
+			prometheus.GaugeValue,
+			durationInSeconds,
+			item.Resource,
+			item.Group,
+		)
 		for _, ipAddress := range ipAddresses {
 			logrus.Debugf("Checking %s with port %d on %s...", item.Host, item.Port, ipAddress.String())
 			startTime = time.Now()
@@ -45,12 +58,28 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			if IsTCPPortAvailable(ipAddress, item.Port, e.config.ConnectionTimeout) {
 				avFloat = 1.0
 				durationInSeconds = time.Now().Sub(startTime).Seconds()
-				ch <- prometheus.MustNewConstMetric(dialDuration, prometheus.GaugeValue, durationInSeconds, item.Resource, ipAddress.String(), isIPV6Address)
+				ch <- prometheus.MustNewConstMetric(
+					dialDuration,
+					prometheus.GaugeValue,
+					durationInSeconds,
+					item.Resource,
+					item.Group,
+					ipAddress.String(),
+					isIPV6Address,
+				)
 			} else {
-				logrus.Warnf("TCP port not available: %s on %s", item.Resource, ipAddress.String())
+				logrus.Warnf("%s port not available: %s on %s", strings.ToUpper(item.Network), item.Resource, ipAddress.String())
 				avFloat = 0.0
 			}
-			ch <- prometheus.MustNewConstMetric(allowedResource, prometheus.GaugeValue, avFloat, item.Resource, ipAddress.String(), isIPV6Address)
+			ch <- prometheus.MustNewConstMetric(
+				allowedResource,
+				prometheus.GaugeValue,
+				avFloat,
+				item.Resource,
+				item.Group,
+				ipAddress.String(),
+				isIPV6Address,
+			)
 		}
 	}
 }
