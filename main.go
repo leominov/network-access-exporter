@@ -23,6 +23,7 @@ const (
 
 var (
 	showVersion = flag.Bool("version", false, "Prints version information and exit")
+	lintConfig  = flag.Bool("lint", false, "Check configuration and exit")
 
 	allowedResource = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "allowed"),
@@ -65,11 +66,19 @@ func main() {
 		versionInfo()
 	}
 
-	logrus.Infof("Starting %s %s...", exporterName, version.Version)
+	if !*lintConfig {
+		logrus.Infof("Starting %s %s...", exporterName, version.Version)
+	}
 
 	cfg, err := LoadConfig()
 	if err != nil {
 		logrus.Fatal(err)
+	}
+
+	if *lintConfig {
+		logrus.Infof("Resources: %d", len(cfg.Items))
+		logrus.Info("Look's good")
+		return
 	}
 
 	exporter := NewExporter(cfg)
