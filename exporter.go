@@ -39,7 +39,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			)
 			continue
 		}
-		durationInSeconds = time.Now().Sub(startTime).Seconds()
+		durationInSeconds = time.Since(startTime).Seconds()
 		ch <- prometheus.MustNewConstMetric(
 			loopkupDuration,
 			prometheus.GaugeValue,
@@ -57,7 +57,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			}
 			if IsTCPPortAvailable(ipAddress, item.Port, e.config.ConnectionTimeout) {
 				avFloat = 1.0
-				durationInSeconds = time.Now().Sub(startTime).Seconds()
+				durationInSeconds = time.Since(startTime).Seconds()
 				ch <- prometheus.MustNewConstMetric(
 					dialDuration,
 					prometheus.GaugeValue,

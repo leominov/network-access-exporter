@@ -62,7 +62,7 @@ func versionInfo() {
 func main() {
 	flag.Parse()
 
-	if *showVersion == true {
+	if *showVersion {
 		versionInfo()
 	}
 
