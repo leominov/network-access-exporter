@@ -8,6 +8,6 @@ resources:
     - jira.yandex.ru:443
   devops:
     - grafana.com:443
-  database#postgres:
+  database/postgres:
     - yandex.ru:443
     - google.com:443
