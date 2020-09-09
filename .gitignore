@@ -30,3 +30,4 @@ dependencies-stamp
 coverage.out
 debug.test
 config.yaml
+coverage.txt
