@@ -1,5 +1,7 @@
 # Just another Prometheus exporter
 
+[![Build Status](https://travis-ci.com/leominov/network-access-exporter.svg?branch=master)](https://travis-ci.com/leominov/network-access-exporter)
+
 ## Usage
 
 ### Flags
@@ -36,3 +38,8 @@ See [example](config.example.yaml).
 * `network_access_lookup_error` – Lookup error by resource
 * `network_access_lookup_duration_seconds` – Time spent for resource lookup in seconds
 * `network_access_dial_duration_seconds` – Time spent for TCP dial in seconds
+
+## Links
+
+- https://hub.docker.com/repository/docker/leominov/network-access-exporter
+- https://github.com/leominov/network-access-exporter/releases
