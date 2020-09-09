@@ -16,12 +16,14 @@ const (
 	defaultsListenAddr        = ":9407"
 	defaultsMetricsPath       = "/metrics"
 	defaultsLogLevel          = "info"
+	defaultsLogFormat         = "text"
 	defaultsConnectionTimeout = 500 * time.Millisecond
 )
 
 var (
 	connectionTimeout   = flag.Duration("timeout", 0, "Connection timeout")
 	logLevel            = flag.String("log-level", "", "Logging level")
+	logFormat           = flag.String("log-format", "", "Logs format (text or json)")
 	listenAddress       = flag.String("web.listen-address", "", "Listen address")
 	metricsPath         = flag.String("web.telemetry-path", "", "Metrics path")
 	resourcesCollection = flag.String("resources", "", "Resources list")
@@ -33,6 +35,7 @@ type StringMap map[string][]string
 type Config struct {
 	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
 	LogLevel          string        `yaml:"logLevel"`
+	LogFormat         string        `yaml:"logFormat"`
 	ListenAddr        string        `yaml:"listenAddr"`
 	MetricsPath       string        `yaml:"metricsPath"`
 	RawItems          StringMap     `yaml:"resources"`
@@ -85,6 +88,9 @@ func (c *Config) SetEmptyToDefaults() {
 	if len(c.LogLevel) == 0 {
 		c.LogLevel = defaultsLogLevel
 	}
+	if len(c.LogFormat) == 0 {
+		c.LogFormat = defaultsLogFormat
+	}
 	if c.ConnectionTimeout.Nanoseconds() == 0 {
 		c.ConnectionTimeout = defaultsConnectionTimeout
 	}
@@ -96,6 +102,9 @@ func (c *Config) LoadFromFlags() error {
 	}
 	if len(*logLevel) != 0 {
 		c.LogLevel = *logLevel
+	}
+	if len(*logFormat) != 0 {
+		c.LogFormat = *logFormat
 	}
 	if len(*listenAddress) != 0 {
 		c.ListenAddr = *listenAddress
@@ -131,6 +140,14 @@ func parseConfig(c *Config) error {
 		return err
 	}
 	logrus.SetLevel(lvl)
+
+	switch c.LogFormat {
+	case "json":
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	default:
+		logrus.SetFormatter(&logrus.TextFormatter{})
+	}
+
 	if len(c.RawItems) == 0 {
 		return errors.New("empty items list")
 	}

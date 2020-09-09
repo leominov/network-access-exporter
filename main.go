@@ -6,12 +6,11 @@ import (
 	"net/http"
 	"os"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -66,13 +65,13 @@ func main() {
 		versionInfo()
 	}
 
-	if !*lintConfig {
-		logrus.Infof("Starting %s %s...", exporterName, version.Version)
-	}
-
 	cfg, err := LoadConfig()
 	if err != nil {
 		logrus.Fatal(err)
+	}
+
+	if !*lintConfig {
+		logrus.Infof("Starting %s %s...", exporterName, version.Version)
 	}
 
 	if *lintConfig {
