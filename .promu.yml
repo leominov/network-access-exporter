@@ -16,6 +16,8 @@ build:
 tarball:
   files:
     - LICENSE
+    - README.md
+    - config.example.yaml
 crossbuild:
   platforms:
     - linux/amd64
