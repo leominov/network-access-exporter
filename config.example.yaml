@@ -1,5 +1,6 @@
 ---
 connectionTimeout: 500ms
+logFormat: json
 logLevel: debug
 listenAddr: 0.0.0.0:9407
 metricsPath: /metrics

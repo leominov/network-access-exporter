@@ -10,6 +10,8 @@ Usage of ./network-access-exporter:
     	Configuration file in YAML format
   -lint
     	Check configuration and exit
+  -log-format string
+        Logs format (text or json)
   -log-level string
     	Logging level
   -resources string

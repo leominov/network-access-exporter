@@ -13,30 +13,30 @@ import (
 )
 
 const (
-	defaultsListenAddr        = ":9407"
-	defaultsMetricsPath       = "/metrics"
-	defaultsLogLevel          = "info"
-	defaultsLogFormat         = "text"
 	defaultsConnectionTimeout = 500 * time.Millisecond
+	defaultsListenAddr        = ":9407"
+	defaultsLogFormat         = "text"
+	defaultsLogLevel          = "info"
+	defaultsMetricsPath       = "/metrics"
 )
 
 var (
+	configFile          = flag.String("config-file", "", "Configuration file in YAML format")
 	connectionTimeout   = flag.Duration("timeout", 0, "Connection timeout")
-	logLevel            = flag.String("log-level", "", "Logging level")
-	logFormat           = flag.String("log-format", "", "Logs format (text or json)")
 	listenAddress       = flag.String("web.listen-address", "", "Listen address")
+	logFormat           = flag.String("log-format", "", "Logs format (text or json)")
+	logLevel            = flag.String("log-level", "", "Logging level")
 	metricsPath         = flag.String("web.telemetry-path", "", "Metrics path")
 	resourcesCollection = flag.String("resources", "", "Resources list")
-	configFile          = flag.String("config-file", "", "Configuration file in YAML format")
 )
 
 type StringMap map[string][]string
 
 type Config struct {
 	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
-	LogLevel          string        `yaml:"logLevel"`
-	LogFormat         string        `yaml:"logFormat"`
 	ListenAddr        string        `yaml:"listenAddr"`
+	LogFormat         string        `yaml:"logFormat"`
+	LogLevel          string        `yaml:"logLevel"`
 	MetricsPath       string        `yaml:"metricsPath"`
 	RawItems          StringMap     `yaml:"resources"`
 	Items             []Item        `yaml:"-"`
