@@ -12,3 +12,10 @@ resources:
   database/postgres:
     - yandex.ru:443
     - google.com:443
+ifaces:
+  en0:
+    - atlassian
+    - devops
+    - database/postgres
+  eth1:
+    - database/postgres

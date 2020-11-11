@@ -14,9 +14,14 @@ type Item struct {
 	Network  string `yaml:"network,omitempty"`
 	Host     string `yaml:"-"`
 	Port     int    `yaml:"-"`
+	Iface    string `yaml:"iface"`
 }
 
-func ParseResource(resource string) (*Item, error) {
+func ParseResource(resource string, iface_optional ...string ) (*Item, error) {
+	iface := ""
+	if len(iface_optional) > 0 {
+		iface = iface_optional[0]
+	}
 	network := getResourceNetwork(resource)
 	resource = strings.TrimPrefix(resource, fmt.Sprintf("%s://", network))
 	host, port, err := net.SplitHostPort(resource)
@@ -31,6 +36,7 @@ func ParseResource(resource string) (*Item, error) {
 		Network:  network,
 		Host:     host,
 		Port:     portInt,
+		Iface:    iface,
 		Resource: resource,
 	}, nil
 }
@@ -43,6 +49,8 @@ func (i *Item) Lookup() ([]net.IP, error) {
 	}
 	return ipAddresses, nil
 }
+
+
 
 func getResourceNetwork(resource string) string {
 	if !strings.Contains(resource, "://") {

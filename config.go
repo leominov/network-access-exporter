@@ -40,6 +40,8 @@ type Config struct {
 	MetricsPath       string        `yaml:"metricsPath"`
 	RawItems          StringMap     `yaml:"resources"`
 	Items             []Item        `yaml:"-"`
+	RawIfaces         StringMap     `yaml:"ifaces"`
+	Iface             []Item        `yaml:"-"`
 	File              string        `yaml:"-"`
 }
 
@@ -151,15 +153,36 @@ func parseConfig(c *Config) error {
 	if len(c.RawItems) == 0 {
 		return errors.New("empty items list")
 	}
-	for group, items := range c.RawItems {
-		for _, resource := range items {
-			item, err := ParseResource(resource)
-			if err != nil {
-				return err
+
+	if len(c.RawIfaces) == 0 {
+		for group, items := range c.RawItems {
+			for _, resource := range items {
+				item, err := ParseResource(resource)
+				if err != nil {
+					return err
+				}
+				item.Group = group
+				c.Items = append(c.Items, *item)
 			}
-			item.Group = group
-			c.Items = append(c.Items, *item)
+		}
+	} else {
+		for groupif, ifaces := range c.RawIfaces {
+			for _, iface := range ifaces {
+				for groupit, items := range c.RawItems {
+					for _, resource := range items {
+						if groupit == iface {
+							item, err := ParseResource(resource,groupif)
+							if err != nil {
+								return err
+							}
+							item.Group = groupit
+							c.Items = append(c.Items, *item)
+						}
+					}
+				}
+			}
 		}
 	}
+
 	return nil
 }
