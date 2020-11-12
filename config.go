@@ -171,7 +171,7 @@ func parseConfig(c *Config) error {
 				for groupit, items := range c.RawItems {
 					for _, resource := range items {
 						if groupit == iface {
-							item, err := ParseResource(resource,groupif)
+							item, err := ParseResource(resource, groupif)
 							if err != nil {
 								return err
 							}

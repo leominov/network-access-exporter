@@ -59,29 +59,29 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 				isIPV6Address = "0"
 			}
 			if item.Iface != "" && IsTCPPortAvailableIface(item.Iface, ipAddress, item.Port, e.config.ConnectionTimeout) {
-					avFloat = 1.0
-					durationInSeconds = time.Since(startTime).Seconds()
-					ch <- prometheus.MustNewConstMetric(
-						dialDuration,
-						prometheus.GaugeValue,
-						durationInSeconds,
-						item.Resource,
-						item.Group,
-						ipAddress.String(),
-						isIPV6Address,
-					)
+				avFloat = 1.0
+				durationInSeconds = time.Since(startTime).Seconds()
+				ch <- prometheus.MustNewConstMetric(
+					dialDuration,
+					prometheus.GaugeValue,
+					durationInSeconds,
+					item.Resource,
+					item.Group,
+					ipAddress.String(),
+					isIPV6Address,
+				)
 			} else if item.Iface == "" && IsTCPPortAvailable(ipAddress, item.Port, e.config.ConnectionTimeout) {
-					avFloat = 1.0
-					durationInSeconds = time.Since(startTime).Seconds()
-					ch <- prometheus.MustNewConstMetric(
-						dialDuration,
-						prometheus.GaugeValue,
-						durationInSeconds,
-						item.Resource,
-						item.Group,
-						ipAddress.String(),
-						isIPV6Address,
-					)
+				avFloat = 1.0
+				durationInSeconds = time.Since(startTime).Seconds()
+				ch <- prometheus.MustNewConstMetric(
+					dialDuration,
+					prometheus.GaugeValue,
+					durationInSeconds,
+					item.Resource,
+					item.Group,
+					ipAddress.String(),
+					isIPV6Address,
+				)
 			} else {
 				logrus.Warnf("%s port not available: %s on %s", strings.ToUpper(item.Network), item.Resource, ipAddress.String())
 				avFloat = 0.0

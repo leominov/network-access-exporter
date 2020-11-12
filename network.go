@@ -28,11 +28,11 @@ func IsTCPPortAvailable(ipAddress net.IP, port int, timeout time.Duration) bool 
 
 func IsTCPPortAvailableIface(iface string, ipAddress net.IP, port int, timeout time.Duration) bool {
 	ief, err := net.InterfaceByName(iface)
-	if err !=nil{
+	if err != nil {
 		return false
 	}
 	addrs, err := ief.Addrs()
-	if err !=nil{
+	if err != nil {
 		return false
 	}
 	ipAddr := addrs[0].(*net.IPNet).IP

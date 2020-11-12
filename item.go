@@ -17,7 +17,7 @@ type Item struct {
 	Iface    string `yaml:"iface"`
 }
 
-func ParseResource(resource string, iface_optional ...string ) (*Item, error) {
+func ParseResource(resource string, iface_optional ...string) (*Item, error) {
 	iface := ""
 	if len(iface_optional) > 0 {
 		iface = iface_optional[0]
@@ -49,8 +49,6 @@ func (i *Item) Lookup() ([]net.IP, error) {
 	}
 	return ipAddresses, nil
 }
-
-
 
 func getResourceNetwork(resource string) string {
 	if !strings.Contains(resource, "://") {
