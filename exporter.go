@@ -51,7 +51,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			item.Group,
 		)
 		for _, ipAddress := range ipAddresses {
-			logrus.Debugf("Checking %s with port %d on %s %s", item.Host, item.Port, ipAddress.String(), item.Iface)
+			logrus.Debugf("Checking %s with port %d on %s", item.Host, item.Port, ipAddress.String())
+			if item.Iface != "" {
+				logrus.Debugf("Interface %s", item.Iface)
+			}
 			startTime = time.Now()
 			if ok := IsIPv6(ipAddress.String()); ok {
 				isIPV6Address = "1"

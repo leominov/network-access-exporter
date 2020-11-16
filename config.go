@@ -155,34 +155,43 @@ func parseConfig(c *Config) error {
 	}
 
 	if len(c.RawIfaces) == 0 {
-		for group, items := range c.RawItems {
-			for _, resource := range items {
-				item, err := ParseResource(resource)
-				if err != nil {
-					return err
-				}
-				item.Group = group
-				c.Items = append(c.Items, *item)
-			}
-		}
+		appendItems(c)
 	} else {
-		for groupif, ifaces := range c.RawIfaces {
-			for _, iface := range ifaces {
-				for groupit, items := range c.RawItems {
-					for _, resource := range items {
-						if groupit == iface {
-							item, err := ParseResource(resource, groupif)
-							if err != nil {
-								return err
-							}
-							item.Group = groupit
-							c.Items = append(c.Items, *item)
+		appendIfaces(c)
+	}
+	return nil
+}
+
+func appendItems(c *Config) error {
+	for group, items := range c.RawItems {
+		for _, resource := range items {
+			item, err := ParseResource(resource)
+			if err != nil {
+				return err
+			}
+			item.Group = group
+			c.Items = append(c.Items, *item)
+		}
+	}
+	return nil
+}
+
+func appendIfaces(c *Config) error {
+	for groupif, ifaces := range c.RawIfaces {
+		for _, iface := range ifaces {
+			for groupit, items := range c.RawItems {
+				for _, resource := range items {
+					if groupit == iface {
+						item, err := ParseResource(resource, groupif)
+						if err != nil {
+							return err
 						}
+						item.Group = groupit
+						c.Items = append(c.Items, *item)
 					}
 				}
 			}
 		}
 	}
-
 	return nil
 }
