@@ -28,6 +28,9 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	for _, item := range e.config.Items {
 		startTime = time.Now()
 		ipAddresses, err := item.Lookup()
+		if item.Iface != "" {
+			item.Resource = item.Iface + ":" + item.Resource
+		}
 		if err != nil {
 			logrus.Errorf("Cant get IP address: %v", err)
 			ch <- prometheus.MustNewConstMetric(
@@ -48,14 +51,29 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			item.Group,
 		)
 		for _, ipAddress := range ipAddresses {
-			logrus.Debugf("Checking %s with port %d on %s...", item.Host, item.Port, ipAddress.String())
+			logrus.Debugf("Checking %s with port %d on %s", item.Host, item.Port, ipAddress.String())
+			if item.Iface != "" {
+				logrus.Debugf("Interface %s", item.Iface)
+			}
 			startTime = time.Now()
 			if ok := IsIPv6(ipAddress.String()); ok {
 				isIPV6Address = "1"
 			} else {
 				isIPV6Address = "0"
 			}
-			if IsTCPPortAvailable(ipAddress, item.Port, e.config.ConnectionTimeout) {
+			if item.Iface != "" && IsTCPPortAvailableIface(item.Iface, ipAddress, item.Port, e.config.ConnectionTimeout) {
+				avFloat = 1.0
+				durationInSeconds = time.Since(startTime).Seconds()
+				ch <- prometheus.MustNewConstMetric(
+					dialDuration,
+					prometheus.GaugeValue,
+					durationInSeconds,
+					item.Resource,
+					item.Group,
+					ipAddress.String(),
+					isIPV6Address,
+				)
+			} else if item.Iface == "" && IsTCPPortAvailable(ipAddress, item.Port, e.config.ConnectionTimeout) {
 				avFloat = 1.0
 				durationInSeconds = time.Since(startTime).Seconds()
 				ch <- prometheus.MustNewConstMetric(
